@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { redirect } from "next/navigation";
 import { approveUser } from "@/actions/admin";
-import { CheckCircle, XCircle, LogOut } from "lucide-react";
+import { CheckCircle, XCircle, LogOut, Sparkles } from "lucide-react";
 import { signOut } from "@/lib/auth";
 
 export default async function DashboardPage() {
@@ -125,9 +125,9 @@ export default async function DashboardPage() {
                             </dl>
                         </div>
                         <div className="mt-6">
-                            <a href="/dashboard/ai-notes" className="flex items-center justify-center gap-2 w-full rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500">
-                                <span className="h-4 w-4">✨</span>
-                                Go to AI Study Notes
+                            <a href="/dashboard/ai-tools" className="flex items-center justify-center gap-2 w-full rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500">
+                                <Sparkles className="h-4 w-4" />
+                                Open AI Tools
                             </a>
                         </div>
                     </div>
