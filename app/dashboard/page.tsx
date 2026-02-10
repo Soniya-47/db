@@ -40,16 +40,16 @@ export default async function DashboardPage() {
                                                 <p className="text-sm font-semibold leading-6 text-gray-900">{user.name}</p>
                                                 <p
                                                     className={`rounded-md whitespace-nowrap mt-0.5 px-1.5 py-0.5 text-xs font-medium ring-1 ring-inset ${user.isApproved
-                                                            ? "text-green-700 bg-green-50 ring-green-600/20"
-                                                            : "text-amber-700 bg-amber-50 ring-amber-600/20"
+                                                        ? "text-green-700 bg-green-50 ring-green-600/20"
+                                                        : "text-amber-700 bg-amber-50 ring-amber-600/20"
                                                         }`}
                                                 >
                                                     {user.isApproved ? "Approved" : "Pending"}
                                                 </p>
                                                 <p
                                                     className={`rounded-md whitespace-nowrap mt-0.5 px-1.5 py-0.5 text-xs font-medium ring-1 ring-inset ${user.role === 'admin'
-                                                            ? "text-purple-700 bg-purple-50 ring-purple-600/20"
-                                                            : "text-gray-600 bg-gray-50 ring-gray-500/10"
+                                                        ? "text-purple-700 bg-purple-50 ring-purple-600/20"
+                                                        : "text-gray-600 bg-gray-50 ring-gray-500/10"
                                                         }`}
                                                 >
                                                     {user.role}
@@ -123,6 +123,12 @@ export default async function DashboardPage() {
                                     <dd className="text-green-600 font-medium">Active</dd>
                                 </div>
                             </dl>
+                        </div>
+                        <div className="mt-6">
+                            <a href="/dashboard/ai-notes" className="flex items-center justify-center gap-2 w-full rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500">
+                                <span className="h-4 w-4">✨</span>
+                                Go to AI Study Notes
+                            </a>
                         </div>
                     </div>
                 </div>

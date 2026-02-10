@@ -48,6 +48,11 @@ export default function AiNotesPage() {
                     <p className="mt-4 text-lg text-gray-600">
                         Paste a YouTube video link below to generate comprehensive study notes instantly.
                     </p>
+                    <div className="mt-4">
+                        <a href="/dashboard" className="text-sm font-medium text-indigo-600 hover:text-indigo-500">
+                            &larr; Back to Dashboard
+                        </a>
+                    </div>
                 </div>
 
                 <div className="bg-white p-6 rounded-xl shadow-sm ring-1 ring-gray-900/5">
