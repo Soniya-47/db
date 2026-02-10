@@ -64,7 +64,7 @@ export default function YouTubeGeneratorCard() {
                 <div className="p-6 border-b border-gray-100 bg-gray-50/50">
                     <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
                         <Youtube className="h-5 w-5 text-red-600" />
-                        YouTube Video Notes Generator
+                        YouTube Video Notes Generator <span className="text-xs font-normal px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">v2.0</span>
                     </h2>
                     <p className="mt-1 text-sm text-gray-500">
                         Paste a YouTube video URL to generate a summary, key takeaways, and detailed study notes.
