@@ -45,7 +45,8 @@ export default function DocumentsPage() {
 
             if (!res.ok) {
                 const data = await res.json();
-                alert(data.error || "Upload failed");
+                console.error("Upload failed response:", data);
+                alert(`Upload failed: ${data.error}\n${data.details || ""}\n${data.hint || ""}`);
             } else {
                 alert("File uploaded and processed successfully!");
                 setFile(null);
@@ -162,8 +163,8 @@ export default function DocumentsPage() {
                     {messages.map((msg, i) => (
                         <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
                             <div className={`max-w-[80%] rounded-lg p-3 ${msg.role === "user"
-                                    ? "bg-indigo-600 text-white"
-                                    : "bg-white border border-gray-200 text-gray-800 shadow-sm"
+                                ? "bg-indigo-600 text-white"
+                                : "bg-white border border-gray-200 text-gray-800 shadow-sm"
                                 }`}>
                                 <div className="flex items-center gap-2 mb-1 opacity-70 text-xs">
                                     {msg.role === "user" ? <User className="h-3 w-3" /> : <Bot className="h-3 w-3" />}

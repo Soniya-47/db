@@ -19,6 +19,14 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
+        if (!process.env.GOOGLE_API_KEY) {
+            return NextResponse.json({ error: "Configuration Error: GOOGLE_API_KEY is missing on server." }, { status: 500 });
+        }
+
+        // Debug Logging (Safe)
+        console.log("Upload started for user:", session.user.id);
+        console.log("DB URL Present:", !!process.env.DATABASE_URL);
+
         const formData = await req.formData();
         const file = formData.get("file") as File;
 
@@ -34,7 +42,9 @@ export async function POST(req: NextRequest) {
             try {
                 // Trying to load pdf-parse dynamically to avoid build-time breaking
                 // Using the specific CJS path found in node_modules
-                const pdf = require("pdf-parse/dist/node/cjs/index.cjs");
+                const pdfPath = "pdf-parse/dist/node/cjs/index.cjs";
+                console.log("Loading PDF parser from:", pdfPath);
+                const pdf = require(pdfPath);
                 const data = await pdf(buffer);
                 textContent = data.text;
             } catch (e) {
@@ -64,8 +74,13 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json({ success: true, chunksProcessed: chunks.length });
 
-    } catch (error) {
-        console.error("Upload Error:", error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    } catch (error: any) {
+        console.error("Upload Error Stack:", error);
+        console.error("Upload Error Message:", error.message);
+        return NextResponse.json({
+            error: "Internal Server Error",
+            details: error.message || "Unknown error",
+            hint: "Check server logs for 'Upload Error'"
+        }, { status: 500 });
     }
 }
