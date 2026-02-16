@@ -1,14 +1,26 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
+// @ts-ignore
+import { pipeline } from "@xenova/transformers";
 
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY || "");
+// Specific model for embeddings (small & fast)
+const MODEL_NAME = "Xenova/all-MiniLM-L6-v2";
+
+type PipelineFunction = (text: string | string[], options?: any) => Promise<any>;
+
+// Singleton to hold the pipeline
+let extractor: PipelineFunction | null = null;
 
 export async function generateEmbedding(text: string): Promise<number[]> {
-    // text-embedding-004 results in 404 for some accounts/regions.
-    // Falling back to embedding-001 which is older but widely available.
-    const model = genAI.getGenerativeModel({ model: "embedding-001" });
-    const result = await model.embedContent(text);
-    return result.embedding.values;
+    if (!extractor) {
+        // Load pipeline
+        extractor = await pipeline("feature-extraction", MODEL_NAME);
+    }
+
+    // Generate embedding
+    // pooling: 'mean' or 'cls' depending on model. all-MiniLM-L6-v2 uses mean pooling usually.
+    const output = await extractor!(text, { pooling: "mean", normalize: true });
+
+    // output.data is a Float32Array
+    return Array.from(output.data);
 }
 
 export async function chunkText(text: string, chunkSize: number = 1000, chunkOverlap: number = 200): Promise<string[]> {

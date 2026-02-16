@@ -23,8 +23,8 @@ export const documents = pgTable("documents", {
     userId: serial("user_id").references(() => users.id),
     fileName: text("file_name").notNull(),
     content: text("content").notNull(),
-    // Using 768 dimensions for Google's text-embedding-004
-    embedding: vector("embedding", { dimensions: 768 }),
+    // Using 384 dimensions for all-MiniLM-L6-v2 (local model)
+    embedding: vector("embedding", { dimensions: 384 }),
     createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
     embeddingIndex: index("embeddingIndex").using("hnsw", table.embedding.op("vector_cosine_ops")),
