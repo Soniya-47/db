@@ -33,7 +33,8 @@ export async function POST(req: NextRequest) {
         if (file.type === "application/pdf") {
             try {
                 // Trying to load pdf-parse dynamically to avoid build-time breaking
-                const pdf = require("pdf-parse/lib/pdf-parse.js");
+                // Using the specific CJS path found in node_modules
+                const pdf = require("pdf-parse/dist/node/cjs/index.cjs");
                 const data = await pdf(buffer);
                 textContent = data.text;
             } catch (e) {
