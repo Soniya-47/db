@@ -4,7 +4,9 @@ import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY || "");
 
 export async function generateEmbedding(text: string): Promise<number[]> {
-    const model = genAI.getGenerativeModel({ model: "text-embedding-004" });
+    // text-embedding-004 results in 404 for some accounts/regions.
+    // Falling back to embedding-001 which is older but widely available.
+    const model = genAI.getGenerativeModel({ model: "embedding-001" });
     const result = await model.embedContent(text);
     return result.embedding.values;
 }
