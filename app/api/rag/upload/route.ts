@@ -2,9 +2,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { documents } from "@/lib/db/schema";
 import { generateEmbedding, chunkText } from "@/lib/rag";
-// @ts-ignore
-import pdf from "pdf-parse/lib/pdf-parse.js";
 import { auth } from "@/lib/auth";
+
+// Helper to parse PDF using a more stable method or just accept text for now
+async function parsePdf(buffer: Buffer): Promise<string> {
+    // Placeholder: pdf-parse causes build issues in this environment.
+    // For now, we will return a message or try a basic extraction if possible.
+    // In a real prod env, we'd use pdfjs-dist or a dedicated service.
+    return "PDF parsing is temporarily disabled due to build environment restrictions. Please upload .txt files.";
+}
 
 export async function POST(req: NextRequest) {
     try {
@@ -25,8 +31,15 @@ export async function POST(req: NextRequest) {
         let textContent = "";
 
         if (file.type === "application/pdf") {
-            const data = await pdf(buffer);
-            textContent = data.text;
+            try {
+                // Trying to load pdf-parse dynamically to avoid build-time breaking
+                const pdf = require("pdf-parse/lib/pdf-parse.js");
+                const data = await pdf(buffer);
+                textContent = data.text;
+            } catch (e) {
+                console.error("PDF Parse Error:", e);
+                return NextResponse.json({ error: "Failed to parse PDF. Please try a .txt file." }, { status: 500 });
+            }
         } else if (file.type === "text/plain") {
             textContent = buffer.toString("utf-8");
         } else {
