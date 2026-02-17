@@ -1,5 +1,6 @@
 // @ts-ignore
 import { pipeline } from "@xenova/transformers";
+import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 
 // Specific model for embeddings (small & fast)
 const MODEL_NAME = "Xenova/all-MiniLM-L6-v2";
