@@ -7,22 +7,26 @@ const groq = new Groq({ apiKey: process.env.GROQ_API_KEY || "dummy_key" });
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
-        const { messages } = body;
+        const { messages, workspaceId } = body;
         const lastMessage = messages[messages.length - 1];
         const query = lastMessage.content;
+
+        if (!workspaceId) {
+            return NextResponse.json({ error: "Workspace ID is required" }, { status: 400 });
+        }
 
         if (!query) {
             return NextResponse.json({ error: "No query provided" }, { status: 400 });
         }
 
         // 1. Search for relevant context
-        const docs = await searchDocuments(query);
+        const docs = await searchDocuments(query, parseInt(workspaceId));
         const context = docs.map(doc => `[Source: ${doc.fileName}]\n${doc.content}`).join("\n\n");
 
         if (docs.length === 0) {
             return NextResponse.json({
                 role: "assistant",
-                content: "I couldn't find any relevant documents to answer your question. Please upload some documents first."
+                content: "I couldn't find any relevant documents in this workspace to answer your question."
             });
         }
 
@@ -31,6 +35,7 @@ export async function POST(req: NextRequest) {
         You are a helpful assistant for a Question-Answering system.
         Use the following pieces of retrieved context to answer the user's question.
         If the answer is not in the context, say that you don't know.
+        ALWAYS cite your sources by referring to the filenames provided in the context (e.g. "According to budget.pdf...").
         Keep the answer concise.
         
         Context:

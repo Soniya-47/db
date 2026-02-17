@@ -36,6 +36,11 @@ export async function POST(req: NextRequest) {
 
         const formData = await req.formData();
         const file = formData.get("file") as File;
+        const workspaceId = formData.get("workspaceId") as string;
+
+        if (!workspaceId) {
+            return NextResponse.json({ error: "Workspace ID is required" }, { status: 400 });
+        }
 
         if (!file) {
             return NextResponse.json({ error: "No file provided" }, { status: 400 });
@@ -71,6 +76,7 @@ export async function POST(req: NextRequest) {
 
             await db.insert(documents).values({
                 userId: parseInt(session.user.id),
+                workspaceId: parseInt(workspaceId),
                 fileName: file.name,
                 content: chunk,
                 embedding: embedding,

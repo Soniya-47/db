@@ -18,9 +18,17 @@ export const users = pgTable("users", {
     createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
+export const workspaces = pgTable("workspaces", {
+    id: serial("id").primaryKey(),
+    userId: serial("user_id").references(() => users.id),
+    name: text("name").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 export const documents = pgTable("documents", {
     id: serial("id").primaryKey(),
     userId: serial("user_id").references(() => users.id),
+    workspaceId: serial("workspace_id").references(() => workspaces.id),
     fileName: text("file_name").notNull(),
     content: text("content").notNull(),
     // Using 384 dimensions for all-MiniLM-L6-v2 (local model)
@@ -34,3 +42,5 @@ export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Document = typeof documents.$inferSelect;
 export type NewDocument = typeof documents.$inferInsert;
+export type Workspace = typeof workspaces.$inferSelect;
+export type NewWorkspace = typeof workspaces.$inferInsert;

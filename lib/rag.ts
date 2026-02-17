@@ -37,9 +37,9 @@ export async function chunkText(text: string, chunkSize: number = 1000, chunkOve
 
 import { db } from "@/lib/db";
 import { documents } from "@/lib/db/schema";
-import { cosineDistance, desc, gt, sql } from "drizzle-orm";
+import { cosineDistance, desc, gt, sql, eq, and } from "drizzle-orm";
 
-export async function searchDocuments(query: string, limit: number = 5) {
+export async function searchDocuments(query: string, workspaceId: number, limit: number = 5) {
     const queryEmbedding = await generateEmbedding(query);
 
     // Calculate cosine similarity: 1 - cosineDistance
@@ -52,7 +52,7 @@ export async function searchDocuments(query: string, limit: number = 5) {
             similarity,
         })
         .from(documents)
-        // Filter out low relevance if needed, e.g. similarity > 0.5
+        .where(eq(documents.workspaceId, workspaceId)) // Filter by workspace
         .orderBy(desc(similarity))
         .limit(limit);
 
