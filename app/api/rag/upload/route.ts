@@ -5,7 +5,8 @@ import { generateEmbedding, chunkText } from "@/lib/rag";
 import { auth } from "@/lib/auth";
 
 // Increase timeout for model loading/processing
-export const maxDuration = 60; // 60 seconds (Pro) or 10s (Hobby) - hope for the best
+// Increase timeout for model loading/processing
+export const maxDuration = 60; // 60 seconds
 export const dynamic = 'force-dynamic';
 
 // Helper to parse PDF using pdf2json
