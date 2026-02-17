@@ -4,6 +4,10 @@ import { documents } from "@/lib/db/schema";
 import { generateEmbedding, chunkText } from "@/lib/rag";
 import { auth } from "@/lib/auth";
 
+// Increase timeout for model loading/processing
+export const maxDuration = 60; // 60 seconds (Pro) or 10s (Hobby) - hope for the best
+export const dynamic = 'force-dynamic';
+
 // Helper to parse PDF using pdf2json
 async function parsePdf(buffer: Buffer): Promise<string> {
     const PDFParser = require("pdf2json");

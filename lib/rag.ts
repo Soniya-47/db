@@ -12,8 +12,10 @@ let extractor: PipelineFunction | null = null;
 
 export async function generateEmbedding(text: string): Promise<number[]> {
     if (!extractor) {
+        console.log("Initializing Transformers pipeline...");
         // Load pipeline
         extractor = await pipeline("feature-extraction", MODEL_NAME);
+        console.log("Transformers pipeline initialized.");
     }
 
     // Generate embedding
