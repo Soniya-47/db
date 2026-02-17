@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { redirect } from "next/navigation";
 import { approveUser } from "@/actions/admin";
-import { CheckCircle, XCircle, LogOut, Sparkles, FileText } from "lucide-react";
+import { CheckCircle, XCircle, LogOut, Sparkles, FileText, Folder } from "lucide-react";
 import { signOut } from "@/lib/auth";
 
 export default async function DashboardPage() {
@@ -131,9 +131,9 @@ export default async function DashboardPage() {
                             </a>
                         </div>
                         <div className="mt-4">
-                            <a href="/dashboard/documents" className="flex items-center justify-center gap-2 w-full rounded-md bg-white px-3 py-2 text-sm font-semibold text-indigo-600 shadow-sm ring-1 ring-inset ring-indigo-600 hover:bg-indigo-50">
-                                <FileText className="h-4 w-4" />
-                                RAG Document Q&A
+                            <a href="/dashboard/workspaces" className="flex items-center justify-center gap-2 w-full rounded-md bg-white px-3 py-2 text-sm font-semibold text-indigo-600 shadow-sm ring-1 ring-inset ring-indigo-600 hover:bg-indigo-50">
+                                <Folder className="h-4 w-4" />
+                                Workspaces (Multi-Doc RAG)
                             </a>
                         </div>
                     </div>
