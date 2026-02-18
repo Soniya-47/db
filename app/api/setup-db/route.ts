@@ -21,6 +21,7 @@ export async function GET() {
                 user_id INTEGER,
                 workspace_id INTEGER,
                 file_name TEXT NOT NULL,
+                file_url TEXT,
                 content TEXT NOT NULL,
                 embedding vector(1536),
                 created_at TIMESTAMP NOT NULL DEFAULT NOW()

@@ -18,6 +18,7 @@ export async function GET(req: NextRequest) {
             .select({
                 id: documents.id,
                 fileName: documents.fileName,
+                fileUrl: documents.fileUrl,
                 createdAt: documents.createdAt,
             })
             .from(documents)

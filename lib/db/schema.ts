@@ -30,6 +30,7 @@ export const documents = pgTable("documents", {
     userId: serial("user_id").references(() => users.id),
     workspaceId: serial("workspace_id").references(() => workspaces.id),
     fileName: text("file_name").notNull(),
+    fileUrl: text("file_url"),
     content: text("content").notNull(),
     // Using 3072 dimensions for models/gemini-embedding-001
     embedding: vector("embedding", { dimensions: 3072 }),

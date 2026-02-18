@@ -2,13 +2,14 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams } from "next/navigation";
-import { Upload, FileText, Send, Loader2, Menu, X } from "lucide-react";
+import { Upload, FileText, Send, Loader2, Menu, X, ExternalLink } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
 interface Document {
     id: number;
     fileName: string;
+    fileUrl?: string | null;
     createdAt: string;
 }
 
@@ -142,12 +143,23 @@ export default function WorkspaceDetailPage() {
                         <p className="text-sm text-gray-500 text-center py-4">No documents yet.</p>
                     ) : (
                         documents.map(doc => (
-                            <div key={doc.id} className="flex items-center gap-3 p-3 rounded-lg bg-gray-800/50 border border-gray-700/50 hover:border-indigo-500/30 transition-colors">
+                            <div key={doc.id} className="group flex items-center gap-3 p-3 rounded-lg bg-gray-800/50 border border-gray-700/50 hover:border-indigo-500/30 transition-colors">
                                 <FileText className="w-5 h-5 text-indigo-400 shrink-0" />
-                                <div className="min-w-0">
-                                    <p className="text-sm text-gray-200 truncate">{doc.fileName}</p>
+                                <div className="min-w-0 flex-1">
+                                    <p className="text-sm text-gray-200 truncate" title={doc.fileName}>{doc.fileName}</p>
                                     <p className="text-xs text-gray-500">{new Date(doc.createdAt).toLocaleDateString()}</p>
                                 </div>
+                                {doc.fileUrl && (
+                                    <a
+                                        href={doc.fileUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-gray-500 hover:text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                                        title="View File"
+                                    >
+                                        <ExternalLink className="w-4 h-4" />
+                                    </a>
+                                )}
                             </div>
                         ))
                     )}

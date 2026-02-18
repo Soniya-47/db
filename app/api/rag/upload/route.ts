@@ -3,12 +3,13 @@ import { db } from "@/lib/db";
 import { documents } from "@/lib/db/schema";
 import { generateEmbedding, chunkText } from "@/lib/rag";
 import { auth } from "@/lib/auth";
+import { put } from "@vercel/blob";
 
-// Increase timeout for model loading/processing
 // Increase timeout for model loading/processing (60s)
-export const maxDuration = 60; // 60 seconds
+export const maxDuration = 60;
 export const dynamic = 'force-dynamic';
-export const runtime = 'nodejs';
+// export const runtime = 'nodejs'; // Removing 'nodejs' to allow Edge/Serverless flexibility if compatible, but pdf-parse needs node.
+// Keeping default runtime (Node.js) is safer for pdf-parse.
 
 // Helper to parse PDF using pdf-parse
 async function parsePdf(buffer: Buffer): Promise<string> {
@@ -31,7 +32,7 @@ export async function POST(req: NextRequest) {
         }
 
         if (!process.env.OPENAI_API_KEY) {
-            return NextResponse.json({ error: "Configuration Error: OPENAI_API_KEY is missing on server." }, { status: 500 });
+            return NextResponse.json({ error: "Configuration Error: OPENAI_API_KEY is missing." }, { status: 500 });
         }
 
         const formData = await req.formData();
@@ -46,27 +47,48 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "No file provided" }, { status: 400 });
         }
 
+        // 1. File Size Validation (Max 4.5MB for Vercel Serverless Function Payload/Execution safety)
+        // Vercel Blob allows up to 500MB, but request body size is limited to 4.5MB in Serverless Functions.
+        const MAX_SIZE = 4.5 * 1024 * 1024;
+        if (file.size > MAX_SIZE) {
+            return NextResponse.json({ error: "File size exceeds the 4.5MB limit." }, { status: 400 });
+        }
+
         const arrayBuffer = await file.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
         let textContent = "";
+        let fileUrl = "";
 
+        // 2. Upload to Vercel Blob
+        try {
+            // Check if token exists only if we are actually trying to upload.
+            // If not configured, we might skip or fail. User requested "Fix file upload".
+            if (!process.env.BLOB_READ_WRITE_TOKEN) {
+                console.warn("BLOB_READ_WRITE_TOKEN not found. Skipping Blob upload, standard processing only.");
+            } else {
+                const blob = await put(file.name, file, {
+                    access: 'public',
+                });
+                fileUrl = blob.url;
+            }
+        } catch (uploadError) {
+            console.error("Vercel Blob Upload Failed:", uploadError);
+            // Optionally, we could continue without the URL if blob fails, but user asked for "return file URL".
+            // So we should verify token presence.
+            if (process.env.BLOB_READ_WRITE_TOKEN) {
+                return NextResponse.json({ error: "File storage failed. Please check configuration." }, { status: 500 });
+            }
+        }
+
+        // 3. Parse Content
         if (file.type === "application/pdf") {
             try {
-                console.log(`Attempting to parse PDF: ${file.name}, Size: ${buffer.length} bytes`);
                 textContent = await parsePdf(buffer);
-                console.log(`PDF Parsed Successfully. Text Length: ${textContent.length}`);
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            } catch (e: any) {
-                console.error("PDF Parse Error Details:", {
-                    message: e.message,
-                    name: e.name,
-                    stack: e.stack,
-                    bufferSize: buffer.length
-                });
+            } catch (e) {
+                const errorMessage = e instanceof Error ? e.message : "Unknown error";
                 return NextResponse.json({
                     error: "Failed to parse PDF",
-                    details: e.message,
-                    tip: "Ensure the file is a valid PDF and not corrupted."
+                    details: errorMessage
                 }, { status: 500 });
             }
         } else if (file.type === "text/plain") {
@@ -76,13 +98,12 @@ export async function POST(req: NextRequest) {
         }
 
         if (!textContent || textContent.trim().length === 0) {
-            return NextResponse.json({ error: "Extensions extracted no text from this file." }, { status: 400 });
+            return NextResponse.json({ error: "Extracted no text from this file." }, { status: 400 });
         }
 
-        // Chunk the text
+        // 4. Chunk & Embed
         const chunks = await chunkText(textContent);
 
-        // Process chunks
         for (const chunk of chunks) {
             const embedding = await generateEmbedding(chunk);
 
@@ -90,29 +111,24 @@ export async function POST(req: NextRequest) {
                 userId: parseInt(session.user.id),
                 workspaceId: parseInt(workspaceId),
                 fileName: file.name,
+                fileUrl: fileUrl || null, // Store URL if available
                 content: chunk,
                 embedding: embedding,
             });
         }
 
-        return NextResponse.json({ success: true, chunksProcessed: chunks.length });
+        return NextResponse.json({
+            success: true,
+            chunksProcessed: chunks.length,
+            fileUrl: fileUrl,
+            message: fileUrl ? "File uploaded and indexed." : "File indexed (storage not configured)."
+        });
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } catch (error: any) {
+    } catch (error) {
         console.error("CRITICAL UPLOAD ERROR:", error);
-
-        // Check for specific error types
-        if (error.message?.includes("embedding")) {
-            console.error("Embedding Generation Failed. Check OpenAI API Key or Model Name.");
-        }
-        if (error.message?.includes("vector")) {
-            console.error("Database Vector Error. Schema mismatch likely.");
-        }
-
         return NextResponse.json({
             error: "Upload Failed",
-            details: error.message || "Unknown error",
-            stack: error.stack // BE CAREFUL: Only for debugging!
+            details: error instanceof Error ? error.message : "Unknown error"
         }, { status: 500 });
     }
 }
