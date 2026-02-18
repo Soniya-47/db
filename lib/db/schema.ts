@@ -31,8 +31,8 @@ export const documents = pgTable("documents", {
     workspaceId: serial("workspace_id").references(() => workspaces.id),
     fileName: text("file_name").notNull(),
     content: text("content").notNull(),
-    // Using 384 dimensions for all-MiniLM-L6-v2 (local model)
-    embedding: vector("embedding", { dimensions: 384 }),
+    // Using 768 dimensions for Google text-embedding-004
+    embedding: vector("embedding", { dimensions: 768 }),
     createdAt: timestamp("created_at").defaultNow().notNull(),
 }, (table) => ({
     embeddingIndex: index("embeddingIndex").using("hnsw", table.embedding.op("vector_cosine_ops")),
