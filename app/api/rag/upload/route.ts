@@ -9,19 +9,16 @@ import { auth } from "@/lib/auth";
 export const maxDuration = 60; // 60 seconds
 export const dynamic = 'force-dynamic';
 
-// Helper to parse PDF using pdf2json
+// Helper to parse PDF using pdf-parse
 async function parsePdf(buffer: Buffer): Promise<string> {
-    const PDFParser = require("pdf2json");
-    const parser = new PDFParser(null, 1); // 1 = text only
-
-    return new Promise((resolve, reject) => {
-        parser.on("pdfParser_dataError", (errData: any) => reject(errData.parserError));
-        parser.on("pdfParser_dataReady", (pdfData: any) => {
-            // pdf2json returns URL encoded text sometimes, but usually raw text content is accessible via getRawTextContent()
-            resolve(parser.getRawTextContent());
-        });
-        parser.parseBuffer(buffer);
-    });
+    const pdf = require("pdf-parse");
+    try {
+        const data = await pdf(buffer);
+        return data.text;
+    } catch (error) {
+        console.error("PDF Parsing Error:", error);
+        throw new Error("Failed to parse PDF content.");
+    }
 }
 
 export async function POST(req: NextRequest) {
