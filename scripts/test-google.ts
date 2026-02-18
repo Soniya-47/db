@@ -1,6 +1,8 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 require("dotenv").config({ path: ".env.local" });
 
+export { }; // Make this a module
+
 async function testEmbedding() {
     console.log("Testing Google Embeddings...");
     const key = process.env.GOOGLE_API_KEY;

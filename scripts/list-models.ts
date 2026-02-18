@@ -1,6 +1,9 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 require("dotenv").config({ path: ".env.local" });
 
+export { }; // Make this a module
+
+
 async function listModels() {
     const key = process.env.GOOGLE_API_KEY;
     if (!key) return console.error("No API Key");
