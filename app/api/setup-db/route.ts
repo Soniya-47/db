@@ -22,7 +22,7 @@ export async function GET() {
                 workspace_id INTEGER,
                 file_name TEXT NOT NULL,
                 content TEXT NOT NULL,
-                embedding vector(768),
+                embedding vector(3072),
                 created_at TIMESTAMP NOT NULL DEFAULT NOW()
             );
         `);

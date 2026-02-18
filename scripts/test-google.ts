@@ -15,7 +15,7 @@ async function testEmbedding() {
     try {
         const genAI = new GoogleGenerativeAI(key);
         // Using the model we switched to
-        const model = genAI.getGenerativeModel({ model: "embedding-001" });
+        const model = genAI.getGenerativeModel({ model: "models/gemini-embedding-001" });
 
         const text = "Hello world";
         const result = await model.embedContent(text);
