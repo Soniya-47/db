@@ -5,92 +5,78 @@ import { generateEmbedding, chunkText } from "@/lib/rag";
 import { auth } from "@/lib/auth";
 import { put } from "@vercel/blob";
 
-// Increase timeout for model loading/processing (60s)
-export const maxDuration = 60;
+// Vercel Serverless Config
+export const maxDuration = 60; // 60 seconds allowed
 export const dynamic = 'force-dynamic';
-// export const runtime = 'nodejs'; // Removing 'nodejs' to allow Edge/Serverless flexibility if compatible, but pdf-parse needs node.
-// Keeping default runtime (Node.js) is safer for pdf-parse.
-
-// Helper to parse PDF using pdf-parse
-async function parsePdf(buffer: Buffer): Promise<string> {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const pdf = require("pdf-parse");
-    try {
-        const data = await pdf(buffer);
-        return data.text;
-    } catch (error) {
-        console.error("PDF Parsing Error:", error);
-        throw new Error("Failed to parse PDF content.");
-    }
-}
 
 export async function POST(req: NextRequest) {
+    console.log("[UPLOAD_API] Request received");
+
     try {
+        // 1. Authentication
         const session = await auth();
         if (!session?.user?.id) {
+            console.warn("[UPLOAD_API] Unauthorized request");
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
+        const userId = parseInt(session.user.id);
 
+        // 2. Environment Verification
         if (!process.env.OPENAI_API_KEY) {
+            console.error("[UPLOAD_API] OPENAI_API_KEY missing");
             return NextResponse.json({ error: "Configuration Error: OPENAI_API_KEY is missing." }, { status: 500 });
         }
+        if (!process.env.BLOB_READ_WRITE_TOKEN) {
+            console.error("[UPLOAD_API] BLOB_READ_WRITE_TOKEN missing");
+            return NextResponse.json({ error: "Server Configuration Error: BLOB_READ_WRITE_TOKEN is missing. Please add it to Vercel Environment Variables." }, { status: 500 });
+        }
 
+        // 3. Parse Form Data
         const formData = await req.formData();
         const file = formData.get("file") as File;
-        const workspaceId = formData.get("workspaceId") as string;
+        const workspaceIdStr = formData.get("workspaceId") as string;
 
-        if (!workspaceId) {
-            return NextResponse.json({ error: "Workspace ID is required" }, { status: 400 });
+        if (!workspaceIdStr || !file) {
+            return NextResponse.json({ error: "Missing workspaceId or file" }, { status: 400 });
         }
 
-        if (!file) {
-            return NextResponse.json({ error: "No file provided" }, { status: 400 });
-        }
+        const workspaceId = parseInt(workspaceIdStr);
+        console.log(`[UPLOAD_API] Processing file: ${file.name} (${file.size} bytes) for workspace ${workspaceId}`);
 
-        // 1. File Size Validation (Max 4.5MB for Vercel Serverless Function Payload/Execution safety)
-        // Vercel Blob allows up to 500MB, but request body size is limited to 4.5MB in Serverless Functions.
-        const MAX_SIZE = 4.5 * 1024 * 1024;
+        // 4. Validation
+        const MAX_SIZE = 4.5 * 1024 * 1024; // 4.5MB
         if (file.size > MAX_SIZE) {
-            return NextResponse.json({ error: "File size exceeds the 4.5MB limit." }, { status: 400 });
+            return NextResponse.json({ error: "File size exceeds 4.5MB limit." }, { status: 400 });
         }
 
+        // 5. Upload to Vercel Blob
+        let fileUrl = "";
+        try {
+            console.log("[UPLOAD_API] Uploading to Vercel Blob...");
+            const blob = await put(file.name, file, { access: 'public' });
+            fileUrl = blob.url;
+            console.log(`[UPLOAD_API] Blob uploaded successfully: ${fileUrl}`);
+        } catch (blobError) {
+            console.error("[UPLOAD_API] Blob Upload Failed:", blobError);
+            return NextResponse.json({ error: "Failed to upload file to storage.", details: blobError instanceof Error ? blobError.message : String(blobError) }, { status: 500 });
+        }
+
+        // 6. Read and Parse Validation
         const arrayBuffer = await file.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
         let textContent = "";
-        let fileUrl = "";
 
-        // 2. Upload to Vercel Blob
-        try {
-            // Check if token exists only if we are actually trying to upload.
-            // If not configured, we should fail as cloud storage is required.
-            if (!process.env.BLOB_READ_WRITE_TOKEN) {
-                console.error("BLOB_READ_WRITE_TOKEN is missing.");
-                return NextResponse.json({ error: "Server Configuration Error: BLOB_READ_WRITE_TOKEN is missing. Please add it to Vercel Environment Variables." }, { status: 500 });
-            } else {
-                const blob = await put(file.name, file, {
-                    access: 'public',
-                });
-                fileUrl = blob.url;
-            }
-        } catch (uploadError) {
-            console.error("Vercel Blob Upload Failed:", uploadError);
-            // Optionally, we could continue without the URL if blob fails, but user asked for "return file URL".
-            // So we should verify token presence.
-            if (process.env.BLOB_READ_WRITE_TOKEN) {
-                return NextResponse.json({ error: "File storage failed. Please check configuration." }, { status: 500 });
-            }
-        }
-
-        // 3. Parse Content
         if (file.type === "application/pdf") {
             try {
-                textContent = await parsePdf(buffer);
-            } catch (e) {
-                const errorMessage = e instanceof Error ? e.message : "Unknown error";
-                return NextResponse.json({
-                    error: "Failed to parse PDF",
-                    details: errorMessage
-                }, { status: 500 });
+                console.log("[UPLOAD_API] Parsing PDF...");
+                // eslint-disable-next-line @typescript-eslint/no-require-imports
+                const pdf = require("pdf-parse");
+                const data = await pdf(buffer);
+                textContent = data.text;
+                console.log(`[UPLOAD_API] PDF Parsed. Length: ${textContent.length}`);
+            } catch (pdfError) {
+                console.error("[UPLOAD_API] PDF Parse Error:", pdfError);
+                return NextResponse.json({ error: "Failed to parse PDF content.", details: pdfError instanceof Error ? pdfError.message : String(pdfError) }, { status: 500 });
             }
         } else if (file.type === "text/plain") {
             textContent = buffer.toString("utf-8");
@@ -102,34 +88,46 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Extracted no text from this file." }, { status: 400 });
         }
 
-        // 4. Chunk & Embed
+        // 7. Chunk and Embed
+        console.log("[UPLOAD_API] Chunking text...");
         const chunks = await chunkText(textContent);
+        console.log(`[UPLOAD_API] Created ${chunks.length} chunks. Generating embeddings...`);
 
+        // Process chunks sequentially to avoid rate limits
+        let processedCount = 0;
         for (const chunk of chunks) {
-            const embedding = await generateEmbedding(chunk);
-
-            await db.insert(documents).values({
-                userId: parseInt(session.user.id),
-                workspaceId: parseInt(workspaceId),
-                fileName: file.name,
-                fileUrl: fileUrl || null, // Store URL if available
-                content: chunk,
-                embedding: embedding,
-            });
+            try {
+                const embedding = await generateEmbedding(chunk);
+                await db.insert(documents).values({
+                    userId,
+                    workspaceId,
+                    fileName: file.name,
+                    fileUrl: fileUrl, // Guaranteed to exist now
+                    content: chunk,
+                    embedding,
+                });
+                processedCount++;
+            } catch (embeddingError) {
+                console.error(`[UPLOAD_API] Error processing chunk ${processedCount + 1}:`, embeddingError);
+                // Continue with other chunks or fail? Standard RAG usually continues or fails hard.
+                // Failing hard here to warn user.
+                throw new Error(`Embedding failed at chunk ${processedCount + 1}: ${embeddingError instanceof Error ? embeddingError.message : "Unknown error"}`);
+            }
         }
 
+        console.log("[UPLOAD_API] Processing complete.");
         return NextResponse.json({
             success: true,
-            chunksProcessed: chunks.length,
+            message: "File uploaded and indexed successfully.",
             fileUrl: fileUrl,
-            message: fileUrl ? "File uploaded and indexed." : "File indexed (storage not configured)."
+            chunksProcessed: processedCount
         });
 
-    } catch (error) {
-        console.error("CRITICAL UPLOAD ERROR:", error);
+    } catch (globalError) {
+        console.error("[UPLOAD_API] CRITICAL ERROR:", globalError);
         return NextResponse.json({
-            error: "Upload Failed",
-            details: error instanceof Error ? error.message : "Unknown error"
+            error: "Internal Server Error",
+            details: globalError instanceof Error ? globalError.message : "An unexpected error occurred."
         }, { status: 500 });
     }
 }
