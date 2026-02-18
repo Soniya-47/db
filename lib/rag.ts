@@ -13,8 +13,10 @@ let extractor: PipelineFunction | null = null;
 export async function generateEmbedding(text: string): Promise<number[]> {
     if (!extractor) {
         console.log("Initializing Transformers pipeline...");
-        // Load pipeline
-        extractor = await pipeline("feature-extraction", MODEL_NAME);
+        // Load pipeline with quantized true (default) but explicit for clarity
+        extractor = await pipeline("feature-extraction", MODEL_NAME, {
+            quantized: true,
+        });
         console.log("Transformers pipeline initialized.");
     }
 
