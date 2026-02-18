@@ -62,9 +62,10 @@ export async function POST(req: NextRequest) {
         // 2. Upload to Vercel Blob
         try {
             // Check if token exists only if we are actually trying to upload.
-            // If not configured, we might skip or fail. User requested "Fix file upload".
+            // If not configured, we should fail as cloud storage is required.
             if (!process.env.BLOB_READ_WRITE_TOKEN) {
-                console.warn("BLOB_READ_WRITE_TOKEN not found. Skipping Blob upload, standard processing only.");
+                console.error("BLOB_READ_WRITE_TOKEN is missing.");
+                return NextResponse.json({ error: "Server Configuration Error: BLOB_READ_WRITE_TOKEN is missing. Please add it to Vercel Environment Variables." }, { status: 500 });
             } else {
                 const blob = await put(file.name, file, {
                     access: 'public',
