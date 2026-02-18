@@ -2,6 +2,8 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const dotenv = require("dotenv");
 dotenv.config({ path: ".env.local" });
 
+export { };
+
 // We need to use the REST API manually to list models if the SDK doesn't expose it easily?
 // Actually, let's just try to infer from the error message.
 // But wait, the error message clearly says `models/embedding-001` or `models/text-embedding-004` not found. 
