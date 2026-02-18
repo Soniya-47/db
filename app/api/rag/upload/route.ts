@@ -95,9 +95,9 @@ export async function POST(req: NextRequest) {
         }
 
         return NextResponse.json({
-            error: "Internal Server Error",
+            error: "Upload Failed",
             details: error.message || "Unknown error",
-            hint: "Check server logs for 'CRITICAL UPLOAD ERROR'."
+            stack: error.stack // BE CAREFUL: Only for debugging!
         }, { status: 500 });
     }
 }
