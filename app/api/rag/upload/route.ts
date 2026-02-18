@@ -5,7 +5,7 @@ import { generateEmbedding, chunkText } from "@/lib/rag";
 import { auth } from "@/lib/auth";
 
 // Increase timeout for model loading/processing
-// Increase timeout for model loading/processing
+// Increase timeout for model loading/processing (60s)
 export const maxDuration = 60; // 60 seconds
 export const dynamic = 'force-dynamic';
 
