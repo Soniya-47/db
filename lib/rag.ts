@@ -2,7 +2,7 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY!);
-const model = genAI.getGenerativeModel({ model: "embedding-001" });
+const model = genAI.getGenerativeModel({ model: "models/gemini-embedding-001" });
 
 export async function generateEmbedding(text: string): Promise<number[]> {
     try {
