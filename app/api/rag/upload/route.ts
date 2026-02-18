@@ -87,11 +87,20 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ success: true, chunksProcessed: chunks.length });
 
     } catch (error: any) {
-        console.error("Upload Error Stack:", error);
+        console.error("CRITICAL UPLOAD ERROR:", error);
+
+        // Check for specific error types
+        if (error.message?.includes("embedding")) {
+            console.error("Embedding Generation Failed. Check Google API Key or Model Name.");
+        }
+        if (error.message?.includes("vector")) {
+            console.error("Database Vector Error. Schema mismatch likely.");
+        }
+
         return NextResponse.json({
             error: "Internal Server Error",
             details: error.message || "Unknown error",
-            hint: "Check server logs."
+            hint: "Check server logs for 'CRITICAL UPLOAD ERROR'."
         }, { status: 500 });
     }
 }
