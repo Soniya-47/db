@@ -1,7 +1,9 @@
 import { YoutubeTranscript } from "youtube-transcript";
-import { HfInference } from "@huggingface/inference";
+import OpenAI from "openai";
 
-const hf = new HfInference(process.env.HUGGINGFACE_API_KEY);
+const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+});
 
 export interface StudyNotesResponse {
     summary?: string;
@@ -11,8 +13,8 @@ export interface StudyNotesResponse {
 }
 
 export async function generateStudyNotesLogic(videoUrl: string): Promise<StudyNotesResponse> {
-    if (!process.env.HUGGINGFACE_API_KEY) {
-        return { error: "Hugging Face API Key is not configured." };
+    if (!process.env.OPENAI_API_KEY) {
+        return { error: "OpenAI API Key is not configured." };
     }
 
     try {
@@ -30,8 +32,8 @@ export async function generateStudyNotesLogic(videoUrl: string): Promise<StudyNo
         }
 
         const transcriptText = transcriptItems.map((item) => item.text).join(" ");
-        // Hugging Face models have context limits, but Mixtral is generous. Still good to be safe.
-        const truncatedTranscript = transcriptText.slice(0, 30000);
+        // OpenAI context window is large, but let's keep it reasonable.
+        const truncatedTranscript = transcriptText.slice(0, 50000);
 
         const prompt = `
       You are an expert AI study assistant. 
@@ -50,24 +52,21 @@ export async function generateStudyNotesLogic(videoUrl: string): Promise<StudyNo
       ${truncatedTranscript}
     `;
 
-        const response = await hf.chatCompletion({
-            model: "mistralai/Mixtral-8x7B-Instruct-v0.1",
+        const response = await openai.chat.completions.create({
+            model: "gpt-4o-mini",
             messages: [
                 { role: "user", content: prompt }
             ],
-            max_tokens: 1500,
+            response_format: { type: "json_object" }, // Ensure JSON mode
             temperature: 0.7,
         });
 
-        let text = response.choices[0].message.content || "";
-
-        // Clean up if the model wraps in code blocks despite instructions
-        text = text.replace(/```json/g, "").replace(/```/g, "").trim();
+        const text = response.choices[0].message.content || "";
 
         let data;
         try {
             data = JSON.parse(text);
-        } catch (e) {
+        } catch {
             console.error("Failed to parse JSON from AI:", text);
             return { error: "AI response was not valid JSON. Please try again." };
         }

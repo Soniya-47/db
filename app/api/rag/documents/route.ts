@@ -29,6 +29,7 @@ export async function GET(req: NextRequest) {
 
         return NextResponse.json(docs);
     } catch (error) {
+        console.error("Documents Fetch Error:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

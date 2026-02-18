@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { Loader2, Upload, FileText, Send, Bot, User, Paperclip } from "lucide-react";
+import { Loader2, Upload, Send, Bot, User, Paperclip } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
 interface Message {
@@ -84,6 +84,7 @@ export default function DocumentsPage() {
                 setMessages((prev) => [...prev, { role: "assistant", content: data.content }]);
             }
         } catch (error) {
+            console.error("Chat error:", error);
             setMessages((prev) => [...prev, { role: "assistant", content: "Failed to send message." }]);
         } finally {
             setChatLoading(false);

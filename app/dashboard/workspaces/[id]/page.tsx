@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams } from "next/navigation";
-import { Upload, FileText, Send, Loader2, Trash2, Menu, X } from "lucide-react";
+import { Upload, FileText, Send, Loader2, Menu, X } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
@@ -33,19 +33,7 @@ export default function WorkspaceDetailPage() {
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    // Initial Fetch
-    useEffect(() => {
-        if (workspaceId) {
-            fetchDocuments();
-        }
-    }, [workspaceId]);
-
-    // Scroll to bottom of chat
-    useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, [messages]);
-
-    const fetchDocuments = async () => {
+    const fetchDocuments = useCallback(async () => {
         try {
             const res = await fetch(`/api/rag/documents?workspaceId=${workspaceId}`);
             if (res.ok) {
@@ -55,7 +43,19 @@ export default function WorkspaceDetailPage() {
         } catch (error) {
             console.error("Failed to fetch documents", error);
         }
-    };
+    }, [workspaceId]);
+
+    // Initial Fetch
+    useEffect(() => {
+        if (workspaceId) {
+            fetchDocuments();
+        }
+    }, [workspaceId, fetchDocuments]);
+
+    // Scroll to bottom of chat
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, [messages]);
 
     const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files?.[0]) return;
@@ -81,6 +81,7 @@ export default function WorkspaceDetailPage() {
                 setUploadStatus(`Error: ${data.error}`);
             }
         } catch (error) {
+            console.error("Upload failed", error);
             setUploadStatus("Upload failed.");
         } finally {
             setIsUploading(false);
@@ -114,6 +115,7 @@ export default function WorkspaceDetailPage() {
                 setMessages(prev => [...prev, { role: "assistant", content: `Error: ${data.error}` }]);
             }
         } catch (error) {
+            console.error("Chat error", error);
             setMessages(prev => [...prev, { role: "assistant", content: "Failed to send message." }]);
         } finally {
             setIsLoading(false);

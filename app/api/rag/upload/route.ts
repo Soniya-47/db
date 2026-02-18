@@ -8,6 +8,7 @@ import { auth } from "@/lib/auth";
 // Increase timeout for model loading/processing (60s)
 export const maxDuration = 60; // 60 seconds
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
 // Helper to parse PDF using pdf-parse
 async function parsePdf(buffer: Buffer): Promise<string> {
@@ -29,8 +30,8 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        if (!process.env.HUGGINGFACE_API_KEY) {
-            return NextResponse.json({ error: "Configuration Error: HUGGINGFACE_API_KEY is missing on server." }, { status: 500 });
+        if (!process.env.OPENAI_API_KEY) {
+            return NextResponse.json({ error: "Configuration Error: OPENAI_API_KEY is missing on server." }, { status: 500 });
         }
 
         const formData = await req.formData();
@@ -51,11 +52,22 @@ export async function POST(req: NextRequest) {
 
         if (file.type === "application/pdf") {
             try {
+                console.log(`Attempting to parse PDF: ${file.name}, Size: ${buffer.length} bytes`);
                 textContent = await parsePdf(buffer);
+                console.log(`PDF Parsed Successfully. Text Length: ${textContent.length}`);
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
             } catch (e: any) {
-                console.error("PDF Parse Error:", e);
-                return NextResponse.json({ error: "Failed to parse PDF", details: e.message }, { status: 500 });
+                console.error("PDF Parse Error Details:", {
+                    message: e.message,
+                    name: e.name,
+                    stack: e.stack,
+                    bufferSize: buffer.length
+                });
+                return NextResponse.json({
+                    error: "Failed to parse PDF",
+                    details: e.message,
+                    tip: "Ensure the file is a valid PDF and not corrupted."
+                }, { status: 500 });
             }
         } else if (file.type === "text/plain") {
             textContent = buffer.toString("utf-8");
@@ -91,7 +103,7 @@ export async function POST(req: NextRequest) {
 
         // Check for specific error types
         if (error.message?.includes("embedding")) {
-            console.error("Embedding Generation Failed. Check Hugging Face API Key or Model Name.");
+            console.error("Embedding Generation Failed. Check OpenAI API Key or Model Name.");
         }
         if (error.message?.includes("vector")) {
             console.error("Database Vector Error. Schema mismatch likely.");

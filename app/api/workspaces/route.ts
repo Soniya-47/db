@@ -4,7 +4,7 @@ import { workspaces } from "@/lib/db/schema";
 import { auth } from "@/lib/auth";
 import { eq, desc } from "drizzle-orm";
 
-export async function GET(req: NextRequest) {
+export async function GET() {
     try {
         const session = await auth();
         if (!session?.user?.id) {

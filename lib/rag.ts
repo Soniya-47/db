@@ -1,19 +1,19 @@
-import { HfInference } from "@huggingface/inference";
+import OpenAI from "openai";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 
-const hf = new HfInference(process.env.HUGGINGFACE_API_KEY);
+const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+});
 
 export async function generateEmbedding(text: string): Promise<number[]> {
     try {
-        const response = await hf.featureExtraction({
-            model: "sentence-transformers/all-MiniLM-L6-v2",
-            inputs: text,
+        const response = await openai.embeddings.create({
+            model: "text-embedding-3-small",
+            input: text,
+            encoding_format: "float",
         });
 
-        // HfInference returns (number | number[])[] | number[] depending on inputs.
-        // For a single string input, it returns number[].
-        // We cast it to number[] as we expect a single embedding.
-        return response as number[];
+        return response.data[0].embedding;
     } catch (error) {
         console.error("Error generating embedding:", error);
         throw error;
@@ -31,7 +31,7 @@ export async function chunkText(text: string, chunkSize: number = 1000, chunkOve
 
 import { db } from "@/lib/db";
 import { documents } from "@/lib/db/schema";
-import { cosineDistance, desc, gt, sql, eq, and } from "drizzle-orm";
+import { cosineDistance, desc, sql, eq } from "drizzle-orm";
 
 export async function searchDocuments(query: string, workspaceId: number, limit: number = 5) {
     const queryEmbedding = await generateEmbedding(query);

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CircleUser, ShieldAlert } from "lucide-react";
+import { ShieldAlert } from "lucide-react";
 
 export default function PendingApproval() {
     return (

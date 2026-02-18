@@ -1,12 +1,10 @@
 import * as dotenv from "dotenv";
 dotenv.config({ path: ".env.local" });
-export { };
+
 import { sql } from "drizzle-orm";
+import { db } from "@/lib/db";
 
 async function main() {
-    // Dynamic import
-    const { db } = await import("@/lib/db");
-
     try {
         console.log("Dropping documents table to reset schema...");
         await db.execute(sql`DROP TABLE IF EXISTS documents;`);

@@ -1,26 +1,26 @@
-import { HfInference } from "@huggingface/inference";
+import OpenAI from "openai";
 import dotenv from "dotenv";
 dotenv.config({ path: ".env.local" });
 
 async function testEmbedding() {
-    console.log("Testing Hugging Face Embeddings...");
-    const key = process.env.HUGGINGFACE_API_KEY;
+    console.log("Testing OpenAI Embeddings...");
+    const key = process.env.OPENAI_API_KEY;
     if (!key) {
-        console.error("Error: HUGGINGFACE_API_KEY not found in .env.local");
+        console.error("Error: OPENAI_API_KEY not found in .env.local");
         return;
     }
 
     try {
-        const hf = new HfInference(key);
+        const openai = new OpenAI({ apiKey: key });
         const text = "Hello world";
 
-        const response = await hf.featureExtraction({
-            model: "sentence-transformers/all-MiniLM-L6-v2",
-            inputs: text,
+        const response = await openai.embeddings.create({
+            model: "text-embedding-3-small",
+            input: text,
+            encoding_format: "float",
         });
 
-        // Ensure it's an array
-        const embedding = response as number[];
+        const embedding = response.data[0].embedding;
 
         console.log("Success! Embedding generated.");
         console.log("Dimensions:", embedding.length);

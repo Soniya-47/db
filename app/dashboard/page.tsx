@@ -4,7 +4,7 @@ import { users } from "@/lib/db/schema";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { approveUser } from "@/actions/admin";
-import { CheckCircle, XCircle, LogOut, Sparkles, FileText, Folder } from "lucide-react";
+import { CheckCircle, LogOut, Sparkles, Folder } from "lucide-react";
 import { signOut } from "@/lib/auth";
 
 export default async function DashboardPage() {
