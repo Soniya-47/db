@@ -14,7 +14,7 @@ export async function GET() {
         // 2. Drop old documents table
         await db.execute(sql`DROP TABLE IF EXISTS documents CASCADE;`);
 
-        // 3. Create Documents Table with 768 dimensions (Google Embeddings)
+        // 3. Create Documents Table with 384 dimensions (Hugging Face / all-MiniLM-L6-v2)
         await db.execute(sql`
             CREATE TABLE IF NOT EXISTS documents (
                 id SERIAL PRIMARY KEY,
@@ -22,7 +22,7 @@ export async function GET() {
                 workspace_id INTEGER,
                 file_name TEXT NOT NULL,
                 content TEXT NOT NULL,
-                embedding vector(3072),
+                embedding vector(384),
                 created_at TIMESTAMP NOT NULL DEFAULT NOW()
             );
         `);
@@ -55,7 +55,8 @@ export async function GET() {
             );
         `);
 
-        return NextResponse.json({ success: true, message: "Database initialized successfully with 768-dim vectors!" });
+        return NextResponse.json({ success: true, message: "Database initialized successfully with 384-dim vectors!" });
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
         console.error("Setup Failed:", error);
         return NextResponse.json({ error: error.message }, { status: 500 });

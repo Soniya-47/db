@@ -11,6 +11,7 @@ export const dynamic = 'force-dynamic';
 
 // Helper to parse PDF using pdf-parse
 async function parsePdf(buffer: Buffer): Promise<string> {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const pdf = require("pdf-parse");
     try {
         const data = await pdf(buffer);
@@ -28,8 +29,8 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        if (!process.env.GOOGLE_API_KEY) {
-            return NextResponse.json({ error: "Configuration Error: GOOGLE_API_KEY is missing on server." }, { status: 500 });
+        if (!process.env.HUGGINGFACE_API_KEY) {
+            return NextResponse.json({ error: "Configuration Error: HUGGINGFACE_API_KEY is missing on server." }, { status: 500 });
         }
 
         const formData = await req.formData();
@@ -51,6 +52,7 @@ export async function POST(req: NextRequest) {
         if (file.type === "application/pdf") {
             try {
                 textContent = await parsePdf(buffer);
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
             } catch (e: any) {
                 console.error("PDF Parse Error:", e);
                 return NextResponse.json({ error: "Failed to parse PDF", details: e.message }, { status: 500 });
@@ -83,12 +85,13 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json({ success: true, chunksProcessed: chunks.length });
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
         console.error("CRITICAL UPLOAD ERROR:", error);
 
         // Check for specific error types
         if (error.message?.includes("embedding")) {
-            console.error("Embedding Generation Failed. Check Google API Key or Model Name.");
+            console.error("Embedding Generation Failed. Check Hugging Face API Key or Model Name.");
         }
         if (error.message?.includes("vector")) {
             console.error("Database Vector Error. Schema mismatch likely.");

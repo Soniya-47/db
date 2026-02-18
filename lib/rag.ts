@@ -1,14 +1,19 @@
-const { GoogleGenerativeAI } = require("@google/generative-ai");
+import { HfInference } from "@huggingface/inference";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY!);
-const model = genAI.getGenerativeModel({ model: "models/gemini-embedding-001" });
+const hf = new HfInference(process.env.HUGGINGFACE_API_KEY);
 
 export async function generateEmbedding(text: string): Promise<number[]> {
     try {
-        const result = await model.embedContent(text);
-        const embedding = result.embedding;
-        return embedding.values;
+        const response = await hf.featureExtraction({
+            model: "sentence-transformers/all-MiniLM-L6-v2",
+            inputs: text,
+        });
+
+        // HfInference returns (number | number[])[] | number[] depending on inputs.
+        // For a single string input, it returns number[].
+        // We cast it to number[] as we expect a single embedding.
+        return response as number[];
     } catch (error) {
         console.error("Error generating embedding:", error);
         throw error;

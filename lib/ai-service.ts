@@ -1,7 +1,7 @@
 import { YoutubeTranscript } from "youtube-transcript";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { HfInference } from "@huggingface/inference";
 
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY || "");
+const hf = new HfInference(process.env.HUGGINGFACE_API_KEY);
 
 export interface StudyNotesResponse {
     summary?: string;
@@ -11,8 +11,8 @@ export interface StudyNotesResponse {
 }
 
 export async function generateStudyNotesLogic(videoUrl: string): Promise<StudyNotesResponse> {
-    if (!process.env.GOOGLE_API_KEY) {
-        return { error: "Google API Key is not configured." };
+    if (!process.env.HUGGINGFACE_API_KEY) {
+        return { error: "Hugging Face API Key is not configured." };
     }
 
     try {
@@ -30,9 +30,8 @@ export async function generateStudyNotesLogic(videoUrl: string): Promise<StudyNo
         }
 
         const transcriptText = transcriptItems.map((item) => item.text).join(" ");
+        // Hugging Face models have context limits, but Mixtral is generous. Still good to be safe.
         const truncatedTranscript = transcriptText.slice(0, 30000);
-
-        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
         const prompt = `
       You are an expert AI study assistant. 
@@ -51,15 +50,20 @@ export async function generateStudyNotesLogic(videoUrl: string): Promise<StudyNo
       ${truncatedTranscript}
     `;
 
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        let text = response.text();
+        const response = await hf.chatCompletion({
+            model: "mistralai/Mixtral-8x7B-Instruct-v0.1",
+            messages: [
+                { role: "user", content: prompt }
+            ],
+            max_tokens: 1500,
+            temperature: 0.7,
+        });
+
+        let text = response.choices[0].message.content || "";
 
         // Clean up if the model wraps in code blocks despite instructions
         text = text.replace(/```json/g, "").replace(/```/g, "").trim();
 
-        // Handle potential parsing errors specifically?
-        // Ideally should wrap JSON.parse in try/catch if model returns bad JSON
         let data;
         try {
             data = JSON.parse(text);

@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
 import { users } from "@/lib/db/schema";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { approveUser } from "@/actions/admin";
 import { CheckCircle, XCircle, LogOut, Sparkles, FileText, Folder } from "lucide-react";
 import { signOut } from "@/lib/auth";
@@ -125,16 +126,16 @@ export default async function DashboardPage() {
                             </dl>
                         </div>
                         <div className="mt-6">
-                            <a href="/dashboard/ai-tools" className="flex items-center justify-center gap-2 w-full rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500">
+                            <Link href="/dashboard/ai-tools" className="flex items-center justify-center gap-2 w-full rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500">
                                 <Sparkles className="h-4 w-4" />
                                 Open AI Tools
-                            </a>
+                            </Link>
                         </div>
                         <div className="mt-4">
-                            <a href="/dashboard/workspaces" className="flex items-center justify-center gap-2 w-full rounded-md bg-white px-3 py-2 text-sm font-semibold text-indigo-600 shadow-sm ring-1 ring-inset ring-indigo-600 hover:bg-indigo-50">
+                            <Link href="/dashboard/workspaces" className="flex items-center justify-center gap-2 w-full rounded-md bg-white px-3 py-2 text-sm font-semibold text-indigo-600 shadow-sm ring-1 ring-inset ring-indigo-600 hover:bg-indigo-50">
                                 <Folder className="h-4 w-4" />
                                 Workspaces (Multi-Doc RAG)
-                            </a>
+                            </Link>
                         </div>
                     </div>
                 </div>

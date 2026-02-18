@@ -51,6 +51,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     callbacks: {
         async jwt({ token, user }) {
             if (user) {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 const u = user as unknown as any;
                 token.role = u.role;
                 token.isApproved = u.isApproved;

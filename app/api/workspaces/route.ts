@@ -19,6 +19,7 @@ export async function GET(req: NextRequest) {
             .orderBy(desc(workspaces.createdAt));
 
         return NextResponse.json(userWorkspaces);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
         console.error("Error fetching workspaces:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
@@ -47,6 +48,7 @@ export async function POST(req: NextRequest) {
             .returning();
 
         return NextResponse.json(newWorkspace);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
     } catch (error: any) {
         console.error("Error creating workspace:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

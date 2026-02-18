@@ -1,5 +1,6 @@
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const pdf = require("pdf-parse");
-const fs = require("fs");
+// import fs from "fs";
 
 async function testPdf() {
     try {
@@ -14,6 +15,7 @@ async function testPdf() {
         const dummyBuffer = Buffer.from("Not a PDF");
         try {
             await pdf(dummyBuffer);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (e: any) {
             console.log("Expected error on invalid PDF caught:", e.message ? "Yes" : "No");
         }

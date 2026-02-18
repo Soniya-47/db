@@ -42,7 +42,6 @@ export default function YouTubeGeneratorCard() {
         setData(null);
 
         try {
-            // @ts-ignore - The action type signature needs update but returns the object
             const result = await generateStudyNotes(url);
 
             if (result.error) {
